@@ -34,21 +34,59 @@ def parse_file(fname):
 			})
 	return data
 
-def read_data():
-	ind = 156
-	ifname = os.path.join(DATA_DIR, "Images", "Train", "img{}.jpg".format(ind))
-	tfname = os.path.join(DATA_DIR, "Text", "Train", "poly_gt_img{}.txt".format(ind))
+def read_data(ifname, tfname, debug=False):
 	data = parse_file(tfname)
 	img = np.array(Image.open(ifname))
 
-	plt.imshow(img)
-	for d in data:
-		x = [p[0] for p in d['pos']]
-		y = [p[1] for p in d['pos']]
-		plt.plot(x, y)
-		print(d['transcription'])
-	plt.show()
-		
+	if debug:
+		plt.imshow(img)
+		for d in data:
+			x = [p[0] for p in d['pos']]
+			y = [p[1] for p in d['pos']]
+			plt.plot(x, y)
+			print(d['transcription'])
+		plt.show()
+
+	return {
+		'image': img,
+		'positions': [d['pos'] for d in data],
+		'transcription': [d['transcription'] for d in data]
+	}
+
+def get_dataset_files(test=False):
+	'''
+	
+	Get dataset files in form of (img file, txt file) pairs.
+	Argument:
+		test <boolean> : If True, get test dataset, else get training dataset.
+
+	'''
+
+	imgDir = ''
+	txtDir = ''
+	dataset = []
+
+	if test:
+		imgDir = os.path.join(DATA_DIR, "Images", "Test")
+		txtDir = os.path.join(DATA_DIR, "Text", "Test")
+	else:
+		imgDir = os.path.join(DATA_DIR, "Images", "Train")
+		txtDir = os.path.join(DATA_DIR, "Text", "Train")
+
+	# Get files and sort to maintain order of img, txt pairs
+	ifiles = sorted(os.listdir(imgDir))
+	tfiles = sorted(os.listdir(txtDir))
+
+	# Filter files
+	ifiles = list(filter(lambda f: f.upper().endswith('.JPG'), ifiles))
+	tfiles = list(filter(lambda f: f.upper().endswith('.TXT'), tfiles))
+
+	# Join with root dir
+	ifiles = [os.path.join(imgDir, f) for f in ifiles]
+	tfiles = [os.path.join(txtDir, f) for f in tfiles]
+
+	dataset = [(ifile, tfile) for ifile, tfile in zip(ifiles, tfiles)]
+	return dataset
 
 if __name__ == "__main__":
-	read_data()
+	print(get_dataset_files())
